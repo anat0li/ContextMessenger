@@ -1,0 +1,26 @@
+<Solution>
+  <Folder Name="/docs/">
+    <File Path="CLAUDE.md" />
+    <File Path="docs/chat-prompt.md" />
+    <File Path="global.json" />
+    <File Path="LICENSE" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/ContextMessenger.App.Wpf/ContextMessenger.App.Wpf.csproj" />
+    <Project Path="src/ContextMessenger.Core/ContextMessenger.Core.csproj" />
+    <Project Path="src/ContextMessenger.Data/ContextMessenger.Data.csproj" />
+    <Project Path="src/ContextMessenger.FileSystem/ContextMessenger.FileSystem.csproj" />
+    <Project Path="src/ContextMessenger.Patching/ContextMessenger.Patching.csproj" />
+    <Project Path="src/ContextMessenger.Protocol/ContextMessenger.Protocol.csproj" />
+    <Project Path="src/ContextMessenger.Roslyn/ContextMessenger.Roslyn.csproj" />
+  </Folder>
+  <Folder Name="/src/tests/">
+    <Project Path="src/tests/ContextMessenger.App.Wpf.Tests/ContextMessenger.App.Wpf.Tests.csproj" />
+    <Project Path="src/tests/ContextMessenger.Data.Tests/ContextMessenger.Data.Tests.csproj" />
+    <Project Path="src/tests/ContextMessenger.FileSystem.Tests/ContextMessenger.FileSystem.Tests.csproj" />
+    <Project Path="src/tests/ContextMessenger.Patching.Tests/ContextMessenger.Patching.Tests.csproj" />
+    <Project Path="src/tests/ContextMessenger.Protocol.Tests/ContextMessenger.Protocol.Tests.csproj" />
+    <Project Path="src/tests/ContextMessenger.Roslyn.Tests/ContextMessenger.Roslyn.Tests.csproj" />
+  </Folder>
+</Solution>

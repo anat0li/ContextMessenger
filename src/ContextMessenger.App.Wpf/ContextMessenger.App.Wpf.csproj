@@ -1,0 +1,77 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <None Remove="Resources\Images\accept.svg" />
+    <None Remove="Resources\Images\auto-process-off.svg" />
+    <None Remove="Resources\Images\auto-process-on.svg" />
+    <None Remove="Resources\Images\clear.svg" />
+    <None Remove="Resources\Images\copy-prompt.svg" />
+    <None Remove="Resources\Images\db.svg" />
+    <None Remove="Resources\Images\file.svg" />
+    <None Remove="Resources\Images\file-code.svg" />
+    <None Remove="Resources\Images\folder.svg" />
+    <None Remove="Resources\Images\info.svg" />
+    <None Remove="Resources\Images\issue-open.svg" />
+    <None Remove="Resources\Images\open-folder.svg" />
+    <None Remove="Resources\Images\refresh.svg" />
+    <None Remove="Resources\Images\status-invalid.svg" />
+    <None Remove="Resources\Images\status-valid.svg" />
+    <None Remove="Resources\Images\revert.svg" />
+    <None Remove="Resources\Images\review-off.svg" />
+    <None Remove="Resources\Images\review-on.svg" />
+    <None Remove="Resources\Images\send.svg" />
+    <None Remove="Resources\Images\settings.svg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ContextMessenger.Core\ContextMessenger.Core.csproj" />
+    <ProjectReference Include="..\ContextMessenger.Data\ContextMessenger.Data.csproj" />
+    <ProjectReference Include="..\ContextMessenger.FileSystem\ContextMessenger.FileSystem.csproj" />
+    <ProjectReference Include="..\ContextMessenger.Patching\ContextMessenger.Patching.csproj" />
+    <ProjectReference Include="..\ContextMessenger.Protocol\ContextMessenger.Protocol.csproj" />
+    <ProjectReference Include="..\ContextMessenger.Roslyn\ContextMessenger.Roslyn.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+    <ApplicationIcon>Resources\Images\App.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="InputSimulatorCore" Version="1.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.9" />
+    <PackageReference Include="SharpVectors.Wpf" Version="1.8.5" />
+		<PackageReference Include="AvalonEdit" Version="6.3.1.120" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\Images\accept.svg" />
+    <Resource Include="Resources\Images\App.ico" />
+    <Resource Include="Resources\Images\auto-process-off.svg" />
+    <Resource Include="Resources\Images\auto-process-on.svg" />
+    <Resource Include="Resources\Images\clear.svg" />
+    <Resource Include="Resources\Images\copy-prompt.svg" />
+    <Resource Include="Resources\Images\file.svg" />
+    <Resource Include="Resources\Images\file-code.svg" />
+    <Resource Include="Resources\Images\folder.svg" />
+    <Resource Include="Resources\Images\info.svg" />
+    <Resource Include="Resources\Images\issue-open.svg" />
+    <Resource Include="Resources\Images\open-folder.svg" />
+    <Resource Include="Resources\Images\refresh.svg" />
+    <Resource Include="Resources\Images\db.svg" />
+    <Resource Include="Resources\Images\status-invalid.svg" />
+    <Resource Include="Resources\Images\status-valid.svg" />
+    <Resource Include="Resources\Images\revert.svg" />
+    <Resource Include="Resources\Images\review-off.svg" />
+    <Resource Include="Resources\Images\review-on.svg" />
+    <Resource Include="Resources\Images\send.svg" />
+    <Resource Include="Resources\Images\settings.svg" />
+  </ItemGroup>
+
+</Project>

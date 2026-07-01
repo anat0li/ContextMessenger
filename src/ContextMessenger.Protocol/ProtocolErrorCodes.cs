@@ -1,0 +1,50 @@
+namespace ContextMessenger.Protocol;
+
+public static class ProtocolErrorCodes
+{
+    public const string IncompleteRequestBlock = "incomplete_request_block";
+    public const string InvalidJson = "invalid_json";
+    public const string InvalidVersion = "invalid_version";
+    public const string MissingId = "missing_id";
+    public const string MissingCommands = "missing_commands";
+    public const string EmptyBatch = "empty_batch";
+    public const string EmptyCommandSet = "empty_command_set";
+    public const string MissingCommandType = "missing_command_type";
+    public const string OperationCancelled = "operation_cancelled";
+    public const string UnsupportedCommand = "unsupported_command";
+    public const string UnsupportedFileType = "unsupported_file_type";
+    public const string WorkspaceUnavailable = "workspace_unavailable";
+    public const string SymbolNotFound = "symbol_not_found";
+    public const string InvalidParameters = "invalid_parameters";
+    public const string FileNotFound = "file_not_found";
+    public const string DirectoryNotFound = "directory_not_found";
+    public const string PathOutsideSandbox = "path_outside_sandbox";
+    public const string PatchInProgress = "patch_in_progress";
+    public const string PatchNotActive = "patch_not_active";
+    public const string PatchIdMismatch = "patch_id_mismatch";
+    public const string RevisionMismatch = "revision_mismatch";
+    public const string InvalidPatchState = "invalid_patch_state";
+    public const string InvalidGitState = "invalid_git_state";
+    public const string DirtyWorkingTree = "dirty_working_tree";
+    public const string NotGitRepository = "not_git_repository";
+    public const string UnsupportedPatchPolicy = "unsupported_patch_policy";
+    public const string InvalidPatchPolicy = "invalid_patch_policy";
+    public const string InvalidContentHash = "invalid_content_hash";
+    public const string DiffVerificationFailed = "diff_verification_failed";
+    public const string EditAnchorNotFound = "edit_anchor_not_found";
+    public const string EditAnchorNotUnique = "edit_anchor_not_unique";
+    public const string EditRangeHashMismatch = "edit_range_hash_mismatch";
+    public const string EditConflict = "edit_conflict";
+    public const string UnsupportedEditKind = "unsupported_edit_kind";
+    public const string SemanticSymbolNotFound = "semantic_symbol_not_found";
+    public const string SemanticSymbolNotUnique = "semantic_symbol_not_unique";
+    public const string SemanticSpanHashMismatch = "semantic_span_hash_mismatch";
+    public const string InternalError = "internal_error";
+    public const string SqlProviderNotFound = "sql_provider_not_found";
+    public const string SqlConnectionFailed = "sql_connection_failed";
+    public const string SqlNotReadOnly = "sql_not_read_only";
+    public const string SqlTimeout = "sql_timeout";
+    public const string SqlSchemaUnavailable = "sql_schema_unavailable";
+    public const string SqlTableNotFound = "sql_table_not_found";
+    public const string SqlQueryFailed = "sql_query_failed";
+}

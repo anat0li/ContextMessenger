@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <!--
+      xUnit v3 recommends forwarding TestContext.Current.CancellationToken to every
+      cancellable API. These tests intentionally exercise APIs with their default or
+      explicitly controlled cancellation behavior, so keep that migration advisory
+      from obscuring actionable analyzer warnings.
+    -->
+    <NoWarn>$(NoWarn);xUnit1051</NoWarn>
+  </PropertyGroup>
+</Project>

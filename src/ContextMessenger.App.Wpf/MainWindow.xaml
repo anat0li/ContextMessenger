@@ -1,0 +1,669 @@
+<Window x:Class="ContextMessenger.App.Wpf.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:ContextMessenger.App.Wpf.ViewModels"
+        xmlns:views="clr-namespace:ContextMessenger.App.Wpf.Views"
+        xmlns:svgc="http://sharpvectors.codeplex.com/svgc/"
+        mc:Ignorable="d"
+        Icon="Resources/Images/App.ico"
+        d:DataContext="{d:DesignInstance Type=vm:MainViewModel, IsDesignTimeCreatable=False}"
+        Title="ContextMessenger" Height="600" Width="1000">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <views:InverseBooleanToVisibilityConverter x:Key="InvBoolToVis"/>
+        <views:OperationToBrushConverter x:Key="OpBrush"/>
+
+        <Style x:Key="ToolbarButton" TargetType="Button">
+            <Setter Property="Padding" Value="10,4"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Setter Property="MinWidth" Value="90"/>
+        </Style>
+
+        <Style x:Key="TabCloseButton" TargetType="Button">
+            <Setter Property="Width" Value="16"/>
+            <Setter Property="Height" Value="16"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="6,0,0,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="ToolTip" Value="Close tab"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                Width="{TemplateBinding Width}"
+                                Height="{TemplateBinding Height}">
+                            <Viewbox Width="15" Height="15">
+                                <Grid Width="24" Height="24">
+                                    <Ellipse x:Name="Circle"
+                                             Width="20"
+                                             Height="20"
+                                             Canvas.Left="2"
+                                             Canvas.Top="2"
+                                             HorizontalAlignment="Center"
+                                             VerticalAlignment="Center"
+                                             Stroke="#6B7280"
+                                             StrokeThickness="1.6"
+                                             Opacity="0.55"/>
+                                    <Path x:Name="Cross"
+                                          Data="M14.5 9.50002L9.5 14.5M9.49998 9.5L14.5 14.5"
+                                          Stroke="#374151"
+                                          StrokeThickness="1.7"
+                                          StrokeStartLineCap="Round"
+                                          StrokeEndLineCap="Round"/>
+                                </Grid>
+                            </Viewbox>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Circle" Property="Stroke" Value="#1F2937"/>
+                                <Setter TargetName="Circle" Property="Opacity" Value="0.9"/>
+                                <Setter TargetName="Cross" Property="Stroke" Value="#111827"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Circle" Property="Stroke" Value="#991B1B"/>
+                                <Setter TargetName="Cross" Property="Stroke" Value="#991B1B"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Circle" Property="Opacity" Value="0.22"/>
+                                <Setter TargetName="Cross" Property="Opacity" Value="0.35"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="LogRichTextBox" TargetType="RichTextBox">
+            <Setter Property="FontFamily" Value="Consolas, Cascadia Code, Courier New"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="HorizontalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="BorderBrush" Value="#AEB8C2"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="4"/>
+        </Style>
+
+        <!-- Tab strip headers -->
+        <DataTemplate x:Key="LoopTabHeader">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="{Binding Title}"
+                           VerticalAlignment="Center"/>
+                <Button Style="{StaticResource TabCloseButton}"
+                        Command="{Binding DataContext.CloseLoopCommand, RelativeSource={RelativeSource AncestorType=TabControl}}"
+                        CommandParameter="{Binding}"/>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="ReviewTabHeader">
+            <StackPanel Orientation="Horizontal">
+                <svgc:SvgViewbox Source="pack://application:,,,/Resources/Images/review-on.svg" Width="14" Height="14"/>
+                <TextBlock Text="{Binding TabTitle}" Margin="5,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                <svgc:SvgViewbox Source="pack://application:,,,/Resources/Images/status-valid.svg"
+                                 Width="13" Height="13" Margin="6,0,0,0" VerticalAlignment="Center"
+                                 ToolTip="Validated — build and tests passed"
+                                 Visibility="{Binding IsValidated, Converter={StaticResource BoolToVis}}"/>
+                <svgc:SvgViewbox Source="pack://application:,,,/Resources/Images/status-invalid.svg"
+                                 Width="13" Height="13" Margin="6,0,0,0" VerticalAlignment="Center"
+                                 ToolTip="Needs revision — build errors or test failures"
+                                 Visibility="{Binding IsInvalid, Converter={StaticResource BoolToVis}}"/>
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- Tab bodies -->
+        <DataTemplate x:Key="LoopTabContent">
+            <RichTextBox Style="{StaticResource LogRichTextBox}"
+                         Loaded="LogRichTextBox_OnLoaded"
+                         Unloaded="LogRichTextBox_OnUnloaded"
+                         DataContextChanged="LogRichTextBox_OnDataContextChanged"
+                         ScrollViewer.ScrollChanged="LogRichTextBox_OnScrollChanged"/>
+        </DataTemplate>
+
+        <!-- Changed-files tree node (folder or file). -->
+        <HierarchicalDataTemplate DataType="{x:Type vm:PatchTreeNode}" ItemsSource="{Binding Children}">
+            <StackPanel Orientation="Horizontal" ToolTip="{Binding RelativePath}">
+                <svgc:SvgViewbox Source="{Binding IconUri}" Width="14" Height="14" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding Name}" Margin="5,0,0,0" VerticalAlignment="Center">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="{Binding Operation, Converter={StaticResource OpBrush}}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Operation}" Value="delete">
+                                    <Setter Property="TextDecorations" Value="Strikethrough"/>
+                                </DataTrigger>
+                                <!-- Selected + tree focused: white text on the blue highlight. -->
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=TreeViewItem}}" Value="True"/>
+                                        <Condition Binding="{Binding (Selector.IsSelectionActive), RelativeSource={RelativeSource AncestorType=TreeViewItem}}" Value="True"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Foreground" Value="{x:Static SystemColors.HighlightTextBrush}"/>
+                                </MultiDataTrigger>
+                                <!-- Selected but tree out of focus: dark text on the grey inactive highlight. -->
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=TreeViewItem}}" Value="True"/>
+                                        <Condition Binding="{Binding (Selector.IsSelectionActive), RelativeSource={RelativeSource AncestorType=TreeViewItem}}" Value="False"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Foreground" Value="{x:Static SystemColors.ControlTextBrush}"/>
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </StackPanel>
+        </HierarchicalDataTemplate>
+
+        <DataTemplate x:Key="ReviewTabContent">
+            <Grid Margin="4">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="3*"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="2*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Top: changed-files tree | splitter | diff -->
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="240" MinWidth="140"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*" MinWidth="200"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TreeView Grid.Column="0"
+                              ItemsSource="{Binding RootNodes}"
+                              SelectedItemChanged="ReviewTree_OnSelectedItemChanged"
+                              BorderBrush="#AEB8C2"
+                              BorderThickness="1">
+                        <TreeView.ItemContainerStyle>
+                            <Style TargetType="TreeViewItem">
+                                <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=OneWay}"/>
+                                <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"/>
+                            </Style>
+                        </TreeView.ItemContainerStyle>
+                    </TreeView>
+
+                    <GridSplitter Grid.Column="1"
+                                  Width="4"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Stretch"
+                                  Background="#E1E4E8"/>
+
+                    <views:DiffView Grid.Column="2"
+                                    Lines="{Binding SelectedFileDiff}"
+                                    SourcePath="{Binding SelectedFile.Path}"
+                                    TargetLine="{Binding SelectedFileLine}"
+                                    AddCommentRequested="DiffView_OnAddCommentRequested"/>
+                </Grid>
+
+                <GridSplitter Grid.Row="1"
+                              Height="4"
+                              HorizontalAlignment="Stretch"
+                              VerticalAlignment="Center"
+                              Background="#E1E4E8"/>
+
+                <!-- Bottom: detail tabs. History always; Errors only when the build failed. -->
+                <TabControl Grid.Row="2" Margin="0,4,0,0" SelectedIndex="{Binding DetailTabIndex, Mode=TwoWay}">
+                    <TabItem Header="History">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding HistoryRows}" Margin="4">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Expander Header="{Binding Header}"
+                                                  IsEnabled="{Binding HasHeldResponse}"
+                                                  Margin="0,0,0,2">
+                                            <TextBox Text="{Binding HeldResponse, Mode=OneWay}"
+                                                     IsReadOnly="True"
+                                                     FontFamily="Consolas"
+                                                     MaxHeight="200"
+                                                     Margin="18,2,0,2"
+                                                     VerticalScrollBarVisibility="Auto"
+                                                     HorizontalScrollBarVisibility="Auto"
+                                                     TextWrapping="NoWrap"/>
+                                        </Expander>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </TabItem>
+
+                    <TabItem Visibility="{Binding HasBuildErrors, Converter={StaticResource BoolToVis}}">
+                        <TabItem.Header>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Errors" Foreground="#CF222E" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding BuildErrors.Count, StringFormat=' ({0})'}" Foreground="#CF222E"/>
+                            </StackPanel>
+                        </TabItem.Header>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding BuildErrors}" Margin="6">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="0,0,0,8">
+                                            <TextBlock TextWrapping="Wrap">
+                                                <Hyperlink Command="{Binding DataContext.OpenErrorCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                           CommandParameter="{Binding}"
+                                                           ToolTip="Open the changed file in the diff panel">
+                                                    <Run Text="{Binding Code, Mode=OneWay}" FontWeight="SemiBold"/>
+                                                    <Run Text=" "/>
+                                                    <Run Text="{Binding Location, Mode=OneWay}"/>
+                                                </Hyperlink>
+                                            </TextBlock>
+                                            <TextBox Text="{Binding Message, Mode=OneWay}"
+                                                     IsReadOnly="True"
+                                                     TextWrapping="Wrap"
+                                                     Margin="14,2,0,0"
+                                                     Padding="0"
+                                                     BorderThickness="0"
+                                                     Background="Transparent"
+                                                     Foreground="#3A3F45"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </TabItem>
+
+                    <TabItem Visibility="{Binding HasBuildWarnings, Converter={StaticResource BoolToVis}}">
+                        <TabItem.Header>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Warnings" Foreground="#9A6700" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding BuildWarnings.Count, StringFormat=' ({0})'}" Foreground="#9A6700"/>
+                            </StackPanel>
+                        </TabItem.Header>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding BuildWarnings}" Margin="6">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="0,0,0,8">
+                                            <TextBlock TextWrapping="Wrap">
+                                                <Hyperlink Command="{Binding DataContext.OpenWarningCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                           CommandParameter="{Binding}"
+                                                           ToolTip="Open the changed file in the diff panel">
+                                                    <Run Text="{Binding Code, Mode=OneWay}" FontWeight="SemiBold"/>
+                                                    <Run Text=" "/>
+                                                    <Run Text="{Binding Location, Mode=OneWay}"/>
+                                                </Hyperlink>
+                                            </TextBlock>
+                                            <TextBox Text="{Binding Message, Mode=OneWay}"
+                                                     IsReadOnly="True"
+                                                     TextWrapping="Wrap"
+                                                     Margin="14,2,0,0"
+                                                     Padding="0"
+                                                     BorderThickness="0"
+                                                     Background="Transparent"
+                                                     Foreground="#3A3F45"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </TabItem>
+
+                    <TabItem Visibility="{Binding HasTestFailures, Converter={StaticResource BoolToVis}}">
+                        <TabItem.Header>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Tests" Foreground="#CF222E" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding TestFailures.Count, StringFormat=' ({0})'}" Foreground="#CF222E"/>
+                            </StackPanel>
+                        </TabItem.Header>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding TestFailures}" Margin="6">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Expander Margin="0,0,0,2">
+                                            <Expander.Header>
+                                                <Grid>
+                                                    <!-- Not in the patch: plain (readable) test name. -->
+                                                    <TextBlock Text="{Binding Name}"
+                                                               FontWeight="SemiBold"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               Visibility="{Binding CanJump, Converter={StaticResource InvBoolToVis}}"/>
+                                                    <!-- In the patch: the test name itself jumps to its source. -->
+                                                    <TextBlock FontWeight="SemiBold"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               Visibility="{Binding CanJump, Converter={StaticResource BoolToVis}}">
+                                                        <Hyperlink Command="{Binding DataContext.OpenTestCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                   CommandParameter="{Binding}"
+                                                                   ToolTip="Open the test source in the diff panel">
+                                                            <Run Text="{Binding Name, Mode=OneWay}"/>
+                                                        </Hyperlink>
+                                                    </TextBlock>
+                                                </Grid>
+                                            </Expander.Header>
+                                            <TextBox Text="{Binding Message, Mode=OneWay}"
+                                                     IsReadOnly="True"
+                                                     TextWrapping="Wrap"
+                                                     BorderThickness="0"
+                                                     Background="Transparent"
+                                                     FontFamily="Consolas"
+                                                     Margin="18,2,0,4"/>
+                                        </Expander>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </TabItem>
+
+                    <TabItem Visibility="{Binding HasComments, Converter={StaticResource BoolToVis}}">
+                        <TabItem.Header>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Comments" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding Comments.Count, StringFormat=' ({0})'}"/>
+                            </StackPanel>
+                        </TabItem.Header>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding Comments}" Margin="6">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Expander Margin="0,0,0,2">
+                                            <Expander.ContextMenu>
+                                                <ContextMenu>
+                                                    <MenuItem Header="Respond…" Click="RespondComment_OnClick"/>
+                                                </ContextMenu>
+                                            </Expander.ContextMenu>
+                                            <Expander.Header>
+                                                <DockPanel LastChildFill="True">
+                                                    <Button DockPanel.Dock="Right"
+                                                            Content="✕"
+                                                            FontSize="11"
+                                                            Padding="4,0"
+                                                            Margin="6,0,0,0"
+                                                            Background="Transparent"
+                                                            BorderThickness="0"
+                                                            ToolTip="Remove comment"
+                                                            Command="{Binding DataContext.RemoveCommentCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                            CommandParameter="{Binding}"/>
+                                                    <svgc:SvgViewbox DockPanel.Dock="Left"
+                                                                     Source="pack://application:,,,/Resources/Images/issue-open.svg"
+                                                                     Width="14"
+                                                                     Height="14"
+                                                                     Margin="0,0,5,0"
+                                                                     VerticalAlignment="Center"
+                                                                     ToolTip="Open issue - blocks Accept"
+                                                                     Visibility="{Binding OpenIssue, Converter={StaticResource BoolToVis}}"/>
+                                                    <TextBlock Text="{Binding FirstText}" TextTrimming="CharacterEllipsis"/>
+                                                </DockPanel>
+                                            </Expander.Header>
+                                            <StackPanel Margin="18,2,0,6">
+                                                <ItemsControl ItemsSource="{Binding Messages}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock TextWrapping="Wrap" Margin="0,0,0,3">
+                                                                <Run Text="{Binding AuthorLabel, Mode=OneWay}" FontWeight="SemiBold"/>
+                                                                <Run Text=": "/>
+                                                                <Run Text="{Binding Text, Mode=OneWay}"/>
+                                                            </TextBlock>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                                <TextBlock Foreground="#57606A" Margin="0,4,0,0">
+                                                    <Run Text="id: "/>
+                                                    <Run Text="{Binding Id, Mode=OneWay}" FontFamily="Consolas"/>
+                                                </TextBlock>
+                                                <TextBlock Margin="0,2,0,0">
+                                                    <Hyperlink Command="{Binding DataContext.OpenCommentCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                               CommandParameter="{Binding}"
+                                                               ToolTip="Jump to this position in the diff">
+                                                        <Run Text="{Binding Location, Mode=OneWay}"/>
+                                                    </Hyperlink>
+                                                </TextBlock>
+                                                <TextBlock Text="{Binding AnchorStatusText}"
+                                                           Foreground="#9A6700"
+                                                           Margin="0,2,0,0"
+                                                           TextWrapping="Wrap"
+                                                           Visibility="{Binding HasAnchorWarning, Converter={StaticResource BoolToVis}}"/>
+                                            </StackPanel>
+                                        </Expander>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </TabItem>
+                </TabControl>
+            </Grid>
+        </DataTemplate>
+
+        <views:TabItemTemplateSelector x:Key="TabHeaderSelector"
+                                       LoopTemplate="{StaticResource LoopTabHeader}"
+                                       ReviewTemplate="{StaticResource ReviewTabHeader}"/>
+        <views:TabItemTemplateSelector x:Key="TabContentSelector"
+                                       LoopTemplate="{StaticResource LoopTabContent}"
+                                       ReviewTemplate="{StaticResource ReviewTabContent}"/>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="4,4,4,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <ToolBarTray Grid.Column="0" IsLocked="True">
+                <ToolBar KeyboardNavigation.TabNavigation="Continue" ToolBarTray.IsLocked="True">
+                    <ToolBar.Resources>
+                        <!-- The default toolbar disabled state grays only text foreground, leaving
+                             vector icons at full color. ToolBar applies its button chrome via the
+                             keyed ToolBar.ButtonStyleKey, which an implicit Button style cannot
+                             override, so instead dim the icon and label directly: IsEnabled
+                             propagates down the tree, so these elements are disabled whenever their
+                             owning button is. -->
+                        <Style TargetType="svgc:SvgViewbox">
+                            <Style.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.35"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                        <Style TargetType="TextBlock">
+                            <Style.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.45"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ToolBar.Resources>
+                    <Button Command="{Binding ToggleAutoProcessCommand}"
+                            ToolTip="Auto-process"
+                            views:HintService.Description="Start or stop automatic processing of detected requests for the selected target/root loop.">
+                        <Grid>
+                            <!-- Running: offer the stop action -->
+                            <StackPanel Orientation="Horizontal"
+                                        Visibility="{Binding SelectedLoop.IsAutoProcessEnabled, Converter={StaticResource BoolToVis}}">
+                                <svgc:SvgViewbox Source="pack://application:,,,/Resources/Images/auto-process-off.svg" Width="16" Height="16"/>
+                                <TextBlock Text="Auto Off" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <!-- Stopped: offer the start action -->
+                            <StackPanel Orientation="Horizontal"
+                                        Visibility="{Binding SelectedLoop.IsAutoProcessEnabled, Converter={StaticResource InvBoolToVis}}">
+                                <svgc:SvgViewbox Source="pack://application:,,,/Resources/Images/auto-process-on.svg" Width="16" Height="16"/>
+                                <TextBlock Text="Auto On" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
+                    </Button>
+
+                    <Button Command="{Binding ClearLogCommand}"
+                            ToolTip="Clear log"
+                            views:HintService.Description="Clear the active log view and archive the current log file under the logs folder.">
+                        <StackPanel Orientation="Horizontal">
+                            <svgc:SvgViewbox Source="pack://application:,,,/Resources/Images/clear.svg" Width="16" Height="16"/>
+                            <TextBlock Text="Clear" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Separator/>
+
+                    <Button Command="{Binding ToggleReviewCommand}"
+                            ToolTip="Patch review mode"
+                            views:HintService.Description="Toggle between automatic patch processing and manual review for the selected loop's root.">
+                        <Grid>
+                            <!-- Review on: offer to turn it off -->
+                            <StackPanel Orientation="Horizontal"
+                                        Visibility="{Binding SelectedLoop.IsPatchReviewEnabled, Converter={StaticResource BoolToVis}}">
+                                <svgc:SvgViewbox Source="pack://application:,,,/Resources/Images/review-off.svg" Width="16" Height="16"/>
+                                <TextBlock Text="Review Off" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <!-- Review off: offer to turn it on -->
+                            <StackPanel Orientation="Horizontal"
+                                        Visibility="{Binding SelectedLoop.IsPatchReviewEnabled, Converter={StaticResource InvBoolToVis}}">
+                                <svgc:SvgViewbox Source="pack://application:,,,/Resources/Images/review-on.svg" Width="16" Height="16"/>
+                                <TextBlock Text="Review On" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
+                    </Button>
+
+                    <Button Command="{Binding PatchReview.SendCommand}"
+                            ToolTipService.ShowOnDisabled="True"
+                            ToolTip="Send the held response"
+                            views:HintService.Description="Deliver the held response to the model with any pending reviewer comments; the patch stays under review.">
+                        <StackPanel Orientation="Horizontal">
+                            <svgc:SvgViewbox Source="pack://application:,,,/Resources/Images/send.svg" Width="16" Height="16"/>
+                            <TextBlock Text="Send" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding PatchReview.AcceptCommand}"
+                            ToolTipService.ShowOnDisabled="True"
+                            ToolTip="Accept the validated patch"
+                            views:HintService.Description="Accept the validated patch when there are no open review issues: deliver the accepted response, stage the files, close the page, and dispose the patch.">
+                        <StackPanel Orientation="Horizontal">
+                            <svgc:SvgViewbox Source="pack://application:,,,/Resources/Images/accept.svg" Width="16" Height="16"/>
+                            <TextBlock Text="Accept" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding PatchReview.RevertCommand}"
+                            ToolTipService.ShowOnDisabled="True"
+                            ToolTip="Revert the patch"
+                            views:HintService.Description="Revert the current patch, doing whatever its present state requires.">
+                        <StackPanel Orientation="Horizontal">
+                            <svgc:SvgViewbox Source="pack://application:,,,/Resources/Images/revert.svg" Width="16" Height="16"/>
+                            <TextBlock Text="Revert" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding PatchReview.RefreshCommand}"
+                            ToolTipService.ShowOnDisabled="True"
+                            ToolTip="Refresh patch state"
+                            views:HintService.Description="Re-read the current patch and review state.">
+                        <StackPanel Orientation="Horizontal">
+                            <svgc:SvgViewbox Source="pack://application:,,,/Resources/Images/refresh.svg" Width="16" Height="16"/>
+                            <TextBlock Text="Refresh" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Click="InfoButton_OnClick"
+                            IsEnabled="{Binding PatchReview.IsActive}"
+                            ToolTipService.ShowOnDisabled="True"
+                            ToolTip="Patch info"
+                            views:HintService.Description="Show the patch's title, description, commit message, and status in a dialog.">
+                        <StackPanel Orientation="Horizontal">
+                            <svgc:SvgViewbox Source="pack://application:,,,/Resources/Images/info.svg" Width="16" Height="16"/>
+                            <TextBlock Text="Info" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </ToolBar>
+            </ToolBarTray>
+
+            <ToolBarTray Grid.Column="2" IsLocked="True">
+                <ToolBar ToolBarTray.IsLocked="True">
+                    <Button Command="{Binding CopyProtocolPromptCommand}"
+                            ToolTip="Copy protocol prompt"
+                            views:HintService.Description="Copy the generated ContextMessenger protocol prompt to the clipboard for pasting into the chat client.">
+                        <StackPanel Orientation="Horizontal">
+                            <svgc:SvgViewbox Source="pack://application:,,,/Resources/Images/copy-prompt.svg" Width="16" Height="16"/>
+                            <TextBlock Text="Prompt" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding ManageProfilesCommand}"
+                            ToolTip="Manage profiles…"
+                            views:HintService.Description="Open appsettings.json to edit target and root profiles.">
+                        <StackPanel Orientation="Horizontal">
+                            <svgc:SvgViewbox Source="pack://application:,,,/Resources/Images/settings.svg" Width="16" Height="16"/>
+                            <TextBlock Text="Settings" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </ToolBar>
+            </ToolBarTray>
+        </Grid>
+
+        <DockPanel Grid.Row="1" Margin="8,4,8,4" LastChildFill="True">
+            <TextBlock DockPanel.Dock="Left"
+                       Text="Target:"
+                       VerticalAlignment="Center"
+                       Margin="0,0,8,0"/>
+            <ComboBox DockPanel.Dock="Left"
+                      Width="160"
+                      ItemsSource="{Binding Targets}"
+                      SelectedItem="{Binding SelectedTarget}"
+                      DisplayMemberPath="Name"/>
+            <TextBlock DockPanel.Dock="Left"
+                       Text="Root:"
+                       VerticalAlignment="Center"
+                       Margin="12,0,8,0"/>
+            <Button DockPanel.Dock="Right"
+                    Command="{Binding BrowseRootCommand}"
+                    Padding="6,2"
+                    Margin="8,0,0,0"
+                    ToolTip="Browse…"
+                    views:HintService.Description="Pick a repository folder to add as a root profile.">
+                <StackPanel Orientation="Horizontal">
+                    <svgc:SvgViewbox Source="pack://application:,,,/Resources/Images/open-folder.svg" Width="16" Height="16"/>
+                    <TextBlock Text="Browse…" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+            <Button DockPanel.Dock="Right"
+                    Command="{Binding ManageSqlRootsCommand}"
+                    Padding="6,2"
+                    Margin="8,0,0,0"
+                    ToolTipService.ShowOnDisabled="True"
+                    ToolTip="SQL roots"
+                    views:HintService.Description="Add, edit, test, or select a read-only SQL root.">
+                <StackPanel Orientation="Horizontal">
+                    <svgc:SvgViewbox Source="pack://application:,,,/Resources/Images/db.svg" Width="16" Height="16"/>
+                    <TextBlock Text="SQL" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+            <ComboBox ItemsSource="{Binding Roots}"
+                      SelectedItem="{Binding SelectedRoot}"
+                      DisplayMemberPath="Name"/>
+        </DockPanel>
+
+        <TabControl Grid.Row="2"
+                    Margin="8,4,8,4"
+                    ItemsSource="{Binding Tabs}"
+                    SelectedItem="{Binding SelectedTab}"
+                    ItemTemplateSelector="{StaticResource TabHeaderSelector}"
+                    ContentTemplateSelector="{StaticResource TabContentSelector}"/>
+
+        <StatusBar Grid.Row="3">
+            <StatusBar.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                    </Grid>
+                </ItemsPanelTemplate>
+            </StatusBar.ItemsPanel>
+            <StatusBarItem Grid.Column="0">
+                <TextBlock Text="{Binding Status}"/>
+            </StatusBarItem>
+            <StatusBarItem Grid.Column="1" HorizontalAlignment="Right">
+                <TextBlock Text="{Binding StatusHint}"
+                           Foreground="#4B5563"
+                           TextTrimming="CharacterEllipsis"/>
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</Window>

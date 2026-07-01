@@ -1,0 +1,155 @@
+<Window x:Class="ContextMessenger.App.Wpf.Views.SqlRootSettingsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="SQL Root"
+        Width="620"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        ResizeMode="CanResizeWithGrip">
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="140"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="SQL root:" VerticalAlignment="Center"/>
+            <ComboBox Grid.Column="1"
+                      ItemsSource="{Binding RootChoices}"
+                      SelectedItem="{Binding SelectedChoice}"
+                      DisplayMemberPath="DisplayName"/>
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="140"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Text="Name:" VerticalAlignment="Center" Margin="0,0,8,8"/>
+            <TextBox Grid.Row="0"
+                     Grid.Column="1"
+                     Text="{Binding RootName, UpdateSourceTrigger=PropertyChanged}"
+                     IsReadOnly="{Binding IsExistingRoot}"
+                     Margin="0,0,0,8"/>
+
+            <TextBlock Grid.Row="1" Text="Description:" VerticalAlignment="Center" Margin="0,0,8,8"/>
+            <TextBox Grid.Row="1"
+                     Grid.Column="1"
+                     Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
+                     Margin="0,0,0,8"/>
+
+            <TextBlock Grid.Row="2" Text="Provider:" VerticalAlignment="Center" Margin="0,0,8,8"/>
+            <ComboBox Grid.Row="2"
+                      Grid.Column="1"
+                      ItemsSource="{Binding ProviderChoices}"
+                      Text="{Binding ProviderInvariantName, UpdateSourceTrigger=PropertyChanged}"
+                      IsEditable="True"
+                      IsTextSearchEnabled="True"
+                      Margin="0,0,0,8"/>
+
+            <TextBlock Grid.Row="3" Text="Provider assembly:" VerticalAlignment="Center" Margin="0,0,8,8"/>
+            <TextBox Grid.Row="3"
+                     Grid.Column="1"
+                     Text="{Binding ProviderAssemblyPath, UpdateSourceTrigger=PropertyChanged}"
+                     Margin="0,0,0,8"/>
+
+            <TextBlock Grid.Row="4" Text="Factory type:" VerticalAlignment="Center" Margin="0,0,8,8"/>
+            <TextBox Grid.Row="4"
+                     Grid.Column="1"
+                     Text="{Binding ProviderFactoryTypeName, UpdateSourceTrigger=PropertyChanged}"
+                     Margin="0,0,0,8"/>
+
+            <TextBlock Grid.Row="5" Text="Connection:" VerticalAlignment="Center" Margin="0,0,8,8"/>
+            <Grid Grid.Row="5" Grid.Column="1" Margin="0,0,0,8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                    <RadioButton Content="Environment variable"
+                                 IsChecked="{Binding IsEnvironmentConnectionString}"
+                                 GroupName="ConnectionStringMode"
+                                 Margin="0,0,16,0"/>
+                    <RadioButton Content="Literal"
+                                 GroupName="ConnectionStringMode"
+                                 IsChecked="{Binding IsLiteralConnectionString}"
+                                 Margin="0"/>
+                </StackPanel>
+                <TextBox Grid.Row="1"
+                         Text="{Binding ConnectionStringValue, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="Environment mode stores an env: reference. Literal mode stores a literal: reference; avoid this for secrets."/>
+            </Grid>
+
+            <TextBlock Grid.Row="6" Text="Timeout seconds:" VerticalAlignment="Center" Margin="0,0,8,8"/>
+            <TextBox Grid.Row="6"
+                     Grid.Column="1"
+                     Text="{Binding CommandTimeoutSeconds, UpdateSourceTrigger=PropertyChanged}"
+                     Margin="0,0,0,8"/>
+
+            <TextBlock Grid.Row="7" Text="Max rows:" VerticalAlignment="Center" Margin="0,0,8,8"/>
+            <TextBox Grid.Row="7"
+                     Grid.Column="1"
+                     Text="{Binding MaxRows, UpdateSourceTrigger=PropertyChanged}"
+                     Margin="0,0,0,8"/>
+
+            <TextBlock Grid.Row="8" Text="Max cell bytes:" VerticalAlignment="Center" Margin="0,0,8,8"/>
+            <TextBox Grid.Row="8"
+                     Grid.Column="1"
+                     Text="{Binding MaxCellBytes, UpdateSourceTrigger=PropertyChanged}"
+                     Margin="0,0,0,8"/>
+
+            <CheckBox Grid.Row="9"
+                      Grid.Column="1"
+                      Content="Allow schema commands"
+                      IsChecked="{Binding AllowSchemaCommands}"
+                      Margin="0,0,0,8"/>
+        </Grid>
+
+        <StackPanel Grid.Row="2" Margin="0,4,0,0">
+            <TextBlock Text="{Binding ValidationMessage}"
+                       Foreground="#B91C1C"
+                       TextWrapping="Wrap"/>
+            <TextBlock Text="{Binding TestStatus}"
+                       Margin="0,4,0,0"
+                       TextWrapping="Wrap"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
+            <Button Content="Test"
+                    MinWidth="80"
+                    Padding="10,4"
+                    Command="{Binding TestCommand}"/>
+            <Button Content="Select"
+                    IsDefault="True"
+                    MinWidth="80"
+                    Padding="10,4"
+                    Margin="8,0,0,0"
+                    Command="{Binding SelectCommand}"/>
+            <Button Content="Cancel"
+                    IsCancel="True"
+                    MinWidth="80"
+                    Padding="10,4"
+                    Margin="8,0,0,0"/>
+        </StackPanel>
+    </Grid>
+</Window>
